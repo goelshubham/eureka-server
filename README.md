@@ -111,5 +111,14 @@ eureka:
       defaultZone: http://localhost:8761/eureka/
 ```
 
-
+I added following operation in of the service and hitting this endpoint, I am able to see which all instances are running for the given service-id. All this is done with co-ordination of eureka server. Also, annotate main application class with @EnableDiscoveryClient
+```
+    @Autowired
+    private DiscoveryClient discoveryClient;
+    
+    @RequestMapping("/service-instances/{applicationName}")
+    public List<ServiceInstance> serviceInstancesByApplicationName(@PathVariable String applicationName) {
+        return this.discoveryClient.getInstances(applicationName);
+    }
+```
 
