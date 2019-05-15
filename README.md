@@ -5,6 +5,9 @@ In this tutorial, I will be using Spring Cloud Eureka technology to implement se
 Articles referred:
 - https://sivalabs.in/2018/03/microservices-springcloud-eureka/
 - Official Netflix Eureka documentation - https://github.com/Netflix/eureka/wiki
+- https://spring.io/guides/gs/service-registration-and-discovery/
+- https://cloud.spring.io/spring-cloud-netflix/multi/multi_spring-cloud-eureka-server.html
+
 
 We need to create Eureka Server first and then add eureka client dependency in all the microservices which we want to register to Eureka Server.
 
@@ -54,7 +57,7 @@ public class EurekaServerApplication {
 }
 ```
 
-Add following properties in bootstrap.yml
+Add following properties in bootstrap.yml. The combination of the two caches (client and server) and the heartbeats make a standalone Eureka server fairly resilient to failure, as long as there is some sort of monitor or elastic runtime (such as Cloud Foundry) keeping it alive. In standalone mode, you might prefer to switch off the client side behavior so that it does not keep trying and failing to reach its peers.
 ```
 server:
   port: 8761
@@ -110,7 +113,7 @@ eureka:
     service-url:
       defaultZone: http://localhost:8761/eureka/
 ```
-
+#### Exploring @EnableDiscoveryClient
 I added following operation in of the service and hitting this endpoint, I am able to see which all instances are running for the given service-id. All this is done with co-ordination of eureka server. Also, annotate main application class with @EnableDiscoveryClient
 ```
     @Autowired
@@ -121,4 +124,15 @@ I added following operation in of the service and hitting this endpoint, I am ab
         return this.discoveryClient.getInstances(applicationName);
     }
 ```
+
+#### High Availability, Zones and Regions
+The Eureka server does not have a back end store, but the service instances in the registry all have to send heartbeats to keep their registrations up to date (so this can be done in memory). Clients also have an in-memory cache of Eureka registrations (so they do not have to go to the registry for every request to a service).
+
+By default, every Eureka server is also a Eureka client and requires (at least one) service URL to locate a peer. If you do not provide it, the service runs and works, but it fills your logs with a lot of noise about not being able to register with the peer.
+
+#### Running Eureka Server over more than one server
+Eureka server can be single point of fialure if it is configured only on one server. To Avoid this we can run multiple instances of eureka server and make them aware of each other. They themselves will act as eureka client for other eureka server. Refer these configurations - https://cloud.spring.io/spring-cloud-netflix/multi/multi_spring-cloud-eureka-server.html#spring-cloud-eureka-server-peer-awareness
+
+
+
 
