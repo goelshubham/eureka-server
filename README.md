@@ -39,3 +39,75 @@ All operations from Eureka client may take some time to reflect in the Eureka se
 
 #### Communication mechanism
 By default, Eureka clients use Jersey and Jackson along with JSON payload to communicate with Eureka Server. You can always use a mechanism of your choice by overriding the default one. Note that XStream is also part of the dependency graph for some legacy use cases.
+
+### How to configure Eureka Server?
+Create a new service with spring-cloud-starter-netflix-eureka-server in classpath and use @EnableEurekaServer
+```
+@SpringBootApplication
+@EnableEurekaServer
+public class EurekaServerApplication {
+
+	public static void main(String[] args) {
+		SpringApplication.run(EurekaServerApplication.class, args);
+	}
+
+}
+```
+
+Add following properties in bootstrap.yml
+```
+server:
+  port: 8761
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+```
+Here we’re configuring an application port – 8761 is the default one for Eureka servers. We are telling the built-in Eureka Client not to register with ‘itself’ because our application should be acting as a server.
+
+Bring up the application and we can see dashboard at http://localhost:8761/
+
+### How to configure Eureka Clients?
+Create client services with spring-cloud-starter-netflix-eureka-client in classpath. We can also annotate our application class with @EnableDiscoveryClient or @EnableEurekaClient but these annotations are optional because we already have spring-cloud-starter-netflix-eureka-client in classpath.
+
+Bootstrap.yml looks like below:-
+- We need to define spring.application.name as this same name is used as service id for registration with Eureka server.
+- We need to define eureka.client.service-url.defaultZone property with the location of running eureka server.
+
+```
+spring:
+  cloud:
+    config:
+     uri: http://localhost:8001
+     failFast: true
+     name: storefront-service
+  application:
+    name: storefront-service
+---
+spring:
+  profiles: dev
+---
+spring:
+  profiles:
+    active: dev
+management:
+  endpoint:
+    env:
+      enabled: true 
+    info:
+      enabled: true
+    threaddump:
+      enabled: true
+    refresh:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: env, bus-refresh
+---
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+```
+
